@@ -33,6 +33,14 @@ export interface Gig {
   updatedAt: string;
 }
 
+export interface Trivia {
+  _id: string;
+  text: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Template {
   _id: string;
   name: string;

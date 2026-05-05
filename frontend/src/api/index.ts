@@ -3,6 +3,40 @@ import { Venue, Gig, Template } from '../types';
 
 const api = axios.create({ baseURL: '/api' });
 
+// Attach JWT token to every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// Redirect to login on 401
+api.interceptors.response.use(
+  (r) => r,
+  (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.reload();
+    }
+    return Promise.reject(err);
+  }
+);
+
+export const authApi = {
+  login: (username: string, password: string) =>
+    api.post<{ token: string; username: string }>('/auth/login', { username, password }).then(r => r.data),
+  me: () => api.get<{ username: string }>('/auth/me').then(r => r.data),
+};
+
+export const usersApi = {
+  getAll: () => api.get<{ _id: string; username: string; createdAt: string }[]>('/users').then(r => r.data),
+  create: (username: string, password: string) =>
+    api.post('/users', { username, password }).then(r => r.data),
+  changePassword: (id: string, password: string) =>
+    api.put(`/users/${id}/password`, { password }).then(r => r.data),
+  delete: (id: string) => api.delete(`/users/${id}`).then(r => r.data),
+};
+
 export const venuesApi = {
   getAll: () => api.get<Venue[]>('/venues').then(r => r.data),
   getById: (id: string) => api.get<Venue>(`/venues/${id}`).then(r => r.data),
@@ -30,7 +64,16 @@ export const emailApi = {
     return `/api/email/preview/${venueId}${qs ? `?${qs}` : ''}`;
   },
   previewTemplateUrl: (templateId: string, recipientName = 'Spillestedet') =>
-    `/api/email/preview-template?templateId=${templateId}&recipientName=${encodeURIComponent(recipientName)}`,
+    `/api/public/preview-template?templateId=${templateId}&recipientName=${encodeURIComponent(recipientName)}`,
+};
+
+import type { Trivia } from '../types';
+
+export const triviaApi = {
+  getAll: () => api.get<Trivia[]>('/trivia').then(r => r.data),
+  create: (text: string) => api.post<Trivia>('/trivia', { text }).then(r => r.data),
+  update: (id: string, data: { text?: string; active?: boolean }) => api.put<Trivia>(`/trivia/${id}`, data).then(r => r.data),
+  delete: (id: string) => api.delete(`/trivia/${id}`).then(r => r.data),
 };
 
 export const templatesApi = {

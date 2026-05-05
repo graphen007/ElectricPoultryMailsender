@@ -1,27 +1,27 @@
-# fly.toml — generated for Electric Poultry Mailsender
-# Deploy with: fly deploy
+# fly.toml app configuration file generated for electric-poultry-mailsender on 2026-05-04T12:56:43+02:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app = "electric-poultry-mailsender"
-primary_region = "ams"
+app = 'electric-poultry-mailsender'
+primary_region = 'ams'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
 [env]
-  PORT = "8080"
-  NODE_TLS_REJECT_UNAUTHORIZED = "0"
-
-# Secrets (set once via CLI, never committed):
-#   fly secrets set MONGODB_URI="..." GMAIL_USER="..." GMAIL_APP_PASSWORD="..." BACKEND_URL="https://electric-poultry-mailsender.fly.dev"
+  NODE_TLS_REJECT_UNAUTHORIZED = '0'
+  PORT = '3001'
 
 [http_service]
-  internal_port = 8080
+  internal_port = 3001
   force_https = true
-  auto_stop_machines = "stop"
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
 
 [[vm]]
-  memory = "256mb"
-  cpu_kind = "shared"
+  memory = '256mb'
+  cpu_kind = 'shared'
   cpus = 1
+  memory_mb = 256

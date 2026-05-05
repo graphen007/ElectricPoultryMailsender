@@ -7,6 +7,11 @@ import venueRoutes from './routes/venues';
 import gigRoutes from './routes/gigs';
 import emailRoutes from './routes/email';
 import templateRoutes from './routes/templates';
+import triviaRoutes from './routes/trivia';
+import publicRoutes from './routes/public';
+import authRoutes from './routes/auth';
+import userRoutes from './routes/users';
+import { requireAuth } from './middleware/auth';
 
 dotenv.config();
 
@@ -24,14 +29,21 @@ app.use(express.json());
 // Serve public assets (e.g. images)
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-app.use('/api/venues', venueRoutes);
-app.use('/api/gigs', gigRoutes);
-app.use('/api/email', emailRoutes);
-app.use('/api/templates', templateRoutes);
+// Public routes — no auth required
+app.use('/api/public', publicRoutes);
+app.use('/api/auth', authRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', message: 'Electric Poultry API running' });
 });
+
+// Protected routes — JWT required
+app.use('/api/venues', requireAuth, venueRoutes);
+app.use('/api/gigs', requireAuth, gigRoutes);
+app.use('/api/email', requireAuth, emailRoutes);
+app.use('/api/templates', requireAuth, templateRoutes);
+app.use('/api/trivia', requireAuth, triviaRoutes);
+app.use('/api/users', userRoutes);
 
 // Serve React SPA — must come after all API routes
 const frontendDist = path.join(__dirname, '..', 'frontend');
@@ -44,8 +56,8 @@ mongoose
   .connect(process.env.MONGODB_URI as string)
   .then(() => {
     console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+    app.listen(Number(PORT), '0.0.0.0', () => {
+      console.log(`Server running on 0.0.0.0:${PORT}`);
     });
   })
   .catch((err) => {

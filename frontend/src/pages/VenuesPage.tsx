@@ -7,6 +7,9 @@ import { format } from 'date-fns';
 
 const STATUS_ORDER: VenueStatus[] = ['not_contacted', 'sent', 'positive', 'negative', 'booked', 'played'];
 
+type SortKey = 'name' | 'city' | 'status' | 'emailSentAt';
+type SortDir = 'asc' | 'desc';
+
 interface SendModalState {
   venue: Venue;
   templates: Template[];
@@ -25,6 +28,8 @@ export default function VenuesPage() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [sendModal, setSendModal] = useState<SendModalState | null>(null);
   const [sending, setSending] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>('status');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
   const { showToast } = useToast();
 
   const load = async () => {
@@ -46,7 +51,28 @@ export default function VenuesPage() {
     const q = search.toLowerCase();
     const matchSearch = !q || v.name.toLowerCase().includes(q) || v.email.toLowerCase().includes(q) || (v.city || '').toLowerCase().includes(q) || (v.contactPerson || '').toLowerCase().includes(q);
     return matchStatus && matchSearch;
+  }).sort((a, b) => {
+    let cmp = 0;
+    if (sortKey === 'name') cmp = a.name.localeCompare(b.name);
+    else if (sortKey === 'city') cmp = (a.city || '').localeCompare(b.city || '');
+    else if (sortKey === 'status') cmp = STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status);
+    else if (sortKey === 'emailSentAt') {
+      const aT = a.emailSentAt ? new Date(a.emailSentAt).getTime() : 0;
+      const bT = b.emailSentAt ? new Date(b.emailSentAt).getTime() : 0;
+      cmp = aT - bT;
+    }
+    return sortDir === 'asc' ? cmp : -cmp;
   });
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir('asc'); }
+  }
+
+  function SortIcon({ col }: { col: SortKey }) {
+    if (sortKey !== col) return <span style={{ opacity: 0.25, marginLeft: 4 }}>⇅</span>;
+    return <span style={{ marginLeft: 4, color: 'var(--gold)' }}>{sortDir === 'asc' ? '↑' : '↓'}</span>;
+  }
 
   const handleSave = async (data: Partial<Venue>) => {
     try {
@@ -151,13 +177,13 @@ export default function VenuesPage() {
           <table>
             <thead>
               <tr>
-                <th>Venue</th>
-                <th>City</th>
+                <th onClick={() => toggleSort('name')} style={{ cursor: 'pointer', userSelect: 'none' }}>Venue<SortIcon col="name" /></th>
+                <th onClick={() => toggleSort('city')} style={{ cursor: 'pointer', userSelect: 'none' }}>City<SortIcon col="city" /></th>
                 <th>Contact</th>
                 <th>Email</th>
                 <th>Lang</th>
-                <th>Status</th>
-                <th>Sent At</th>
+                <th onClick={() => toggleSort('status')} style={{ cursor: 'pointer', userSelect: 'none' }}>Status<SortIcon col="status" /></th>
+                <th onClick={() => toggleSort('emailSentAt')} style={{ cursor: 'pointer', userSelect: 'none' }}>Sent At<SortIcon col="emailSentAt" /></th>
                 <th>Actions</th>
               </tr>
             </thead>

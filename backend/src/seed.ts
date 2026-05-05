@@ -1,14 +1,16 @@
 /**
- * Seed script — populates the database with Danish live music venues/festivals
- * and creates default email templates.
+ * Seed script — populates the database with Danish live music venues/festivals,
+ * default email templates, and a default admin user.
  * Run: npx ts-node src/seed.ts
- * Safe to re-run — skips existing entries by name+email / template name+language.
+ * Safe to re-run — skips existing entries by name+email / template name+language / username.
  */
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import Venue from './models/Venue';
 import Template from './models/Template';
-import { getDanishEmailHtml, getDanishEmailText, getEnglishEmailHtml, getEnglishEmailText } from './templates/emailTemplates';
+import Trivia from './models/Trivia';
+import User from './models/User';
+import { getDanishEmailHtml, getDanishEmailText, getEnglishEmailHtml, getEnglishEmailText, getDanishMothemEmailHtml, getDanishMothemEmailText, getEnglishMothemEmailHtml, getEnglishMothemEmailText } from './templates/emailTemplates';
 
 // Must be set before any network call
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -490,6 +492,22 @@ const defaultTemplates = [
     textBody: getEnglishEmailText(PLACEHOLDER),
     isDefault: true,
   },
+  {
+    name: 'Booking Henvendelse med Mothem (Dansk)',
+    language: 'da' as const,
+    subject: 'Electric Poultry + Mothem - En hel aften hård rock?',
+    htmlBody: getDanishMothemEmailHtml(PLACEHOLDER),
+    textBody: getDanishMothemEmailText(PLACEHOLDER),
+    isDefault: false,
+  },
+  {
+    name: 'Booking Inquiry with Mothem (English)',
+    language: 'en' as const,
+    subject: 'Electric Poultry + Mothem - A full night of hard rock?',
+    htmlBody: getEnglishMothemEmailHtml(PLACEHOLDER),
+    textBody: getEnglishMothemEmailText(PLACEHOLDER),
+    isDefault: false,
+  },
 ];
 
 async function seed() {
@@ -534,6 +552,55 @@ async function seed() {
     }
   }
   console.log(`Templates: ${tmplAdded} added, ${tmplSkipped} skipped.\n`);
+
+  // Seed default admin user
+  console.log('--- Seeding default user ---');
+  const existingUser = await User.findOne({ username: 'mikkel' });
+  if (existingUser) {
+    console.log('  SKIP  User: mikkel (already exists)');
+  } else {
+    await User.create({ username: 'mikkel', password: 'fearthechicken' });
+    console.log('  ADD   User: mikkel / fearthechicken');
+  }
+
+  // Seed trivia
+  console.log('--- Seeding trivia ---');
+  const triviaItems = [
+    "Electric Poultry was named after a presenter made a bad joke about erotic chickens.",
+    "The bassists first gig was played entirely out of tune. The crowd loved it.",
+    "The band rehearses in a barn converted to a practise room. It was only recent the horse shit was removed.",
+    "Electric Poultry's motto: Fear the Chicken.",
+    "The band has never agreed on a setlist without arguing for at least 45 minutes.",
+    "Acolyte was written in one night after too much coffee and too little sleep.",
+    "Blod was recorded in two takes. The first one was better.",
+    "Sometimes the leadsinger chooses to simply 'Shake it off' - Tayler Swift 1989 or something.",
+    "Hypocrisy was inspired by someone specific. They know who they are.",
+    "The chicken in the logo was drawn by the lead singer's wife",
+    "Electric Poultry was orignially named Chaotic Poultry",
+    "The cartoonish chickens were drawn by the lead guitarist's girlfriend",
+    "The drummers kick drum can be heard from two floors up.",
+    "Some of these factoids are entirely true... some.",
+    "The bassist's girlfriend is from Mexico - Viva Mexico! taco dela burrito si senior!",
+    "This is not inspired by the legendary Clippy. Not at all...",
+    "The bassist will not stop bullying the lead singer about his car. It's 2016 Dacia Logan. It's a tank.",
+    "There was brief moment our bands name was Papa Pussy and the milf magnets SOMEONE didn't like that...",
+    "The bassists was named nicknamed Papa Pussy",
+    "Although not having slept with any Milf's - the drummer does seem to attract them.",
+    "The drummers nickname is 'The Milf Magnet'",
+    "The leadsingers nickname is 'The Fluffer'",
+    "While Simon is a legendary drummer it doesn't matter, the guitarist can't play tight to save their lives anyhow",
+  ];
+  let triviaAdded = 0, triviaSkipped = 0;
+  for (const text of triviaItems) {
+    const existing = await Trivia.findOne({ text });
+    if (existing) {
+      triviaSkipped++;
+    } else {
+      await Trivia.create({ text, active: true });
+      triviaAdded++;
+    }
+  }
+  console.log(`Trivia: ${triviaAdded} added, ${triviaSkipped} skipped.\n`);
 
   await mongoose.disconnect();
   process.exit(0);

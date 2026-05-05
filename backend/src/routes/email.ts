@@ -81,27 +81,4 @@ router.get('/preview/:venueId', async (req: Request, res: Response) => {
   }
 });
 
-// Preview a template directly (no venue needed)
-router.get('/preview-template', async (req: Request, res: Response) => {
-  try {
-    const templateId = req.query.templateId as string;
-    const recipientName = (req.query.recipientName as string) || 'Spillestedet';
-
-    let html: string;
-    if (templateId) {
-      const template = await Template.findById(templateId);
-      if (!template) return res.status(404).json({ error: 'Template not found' });
-      html = applyPlaceholder(template.htmlBody, recipientName);
-    } else {
-      const lang = (req.query.lang as 'da' | 'en') || 'da';
-      html = lang === 'da' ? getDanishEmailHtml(recipientName) : getEnglishEmailHtml(recipientName);
-    }
-
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(html);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to generate preview' });
-  }
-});
-
 export default router;
