@@ -544,6 +544,140 @@ tbody td {
   flex-shrink: 0;
 }
 
+/* Practice session marker in gig calendar */
+.cal-practice-day {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-bottom: 3px;
+  background: rgba(76, 175, 80, 0.15);
+  color: #81c784;
+  border-left: 2px solid #4caf50;
+  font-family: var(--font-heading);
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Gig chips are now buttons — remove default button chrome */
+.cal-gig {
+  cursor: pointer;
+}
+
+.cal-gig:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+/* Screen-reader-only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+/* Practice availability */
+.practice-day-mine {
+  background: rgba(76, 175, 80, 0.07);
+}
+
+.practice-day-mine:hover {
+  background: rgba(76, 175, 80, 0.13);
+}
+
+.practice-day-scheduled {
+  background: rgba(76, 175, 80, 0.04);
+}
+
+/* Visible focus ring for keyboard navigation */
+.cal-day:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+.practice-avatars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.practice-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  letter-spacing: 0.5px;
+  color: #000;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* Confirmed practice session banner */
+.practice-scheduled-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  margin-top: 3px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  border: none;
+  background: rgba(76, 175, 80, 0.18);
+  color: #81c784;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  letter-spacing: 1.2px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.practice-scheduled-badge:hover,
+.practice-scheduled-badge:focus-visible {
+  background: rgba(76, 175, 80, 0.3);
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
+}
+
+/* Schedule button shown on dates with availability but no session yet.
+   Always visible (not display:none) so keyboard/screen-reader users can reach it. */
+.practice-schedule-btn {
+  display: block;
+  width: 100%;
+  margin-top: 3px;
+  padding: 2px 5px;
+  border: 1px dashed var(--gold-dim);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--gold-dim);
+  font-size: 9px;
+  font-family: var(--font-heading);
+  letter-spacing: 1px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+
+.practice-schedule-btn:hover,
+.practice-schedule-btn:focus-visible {
+  background: rgba(200, 168, 75, 0.12);
+  color: var(--gold);
+  border-color: var(--gold);
+  outline: none;
+}
+
 /* Upcoming gigs */
 .upcoming-gigs {
   display: flex;
@@ -708,17 +842,98 @@ tbody td {
   justify-content: space-between;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
+/* ── Responsive breakpoints ──────────────────────────────────────────────── */
+
+/* Tablet: collapse sidebar to icon rail */
+@media (min-width: 769px) and (max-width: 1024px) {
   .sidebar { width: 60px; min-width: 60px; }
-  .logo-sub, .nav-links li a span:not(.nav-icon), .sidebar-footer { display: none; }
+  .logo-sub,
+  .nav-links li a span:not(.nav-icon),
+  .sidebar-footer { display: none; }
   .logo-text { font-size: 14px; letter-spacing: 1px; }
   .nav-links li a { padding: 14px; justify-content: center; }
   .main-content { margin-left: 60px; }
   .page { padding: 20px 16px; }
   .form-row-2, .form-row-3 { grid-template-columns: 1fr; }
+}
+
+/* Mobile: hamburger sidebar + full-width layout */
+@media (max-width: 768px) {
+  /* Page */
+  .page { padding: 16px 12px; }
+  .page-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .page-title { font-size: 20px; }
+
+  /* Forms */
+  .form-row-2,
+  .form-row-3 { grid-template-columns: 1fr; }
+  .filters { flex-direction: column; align-items: stretch; }
+  .filters .form-control { min-width: unset; width: 100%; }
+
+  /* Modal — full width on mobile */
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal {
+    max-width: 100%;
+    width: 100%;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-height: 92vh;
+  }
+
+  /* Calendar */
+  .calendar-grid { font-size: 11px; }
+  .cal-day {
+    min-height: 52px;
+    padding: 4px 3px;
+  }
+  .cal-day-num { font-size: 11px; }
+  .cal-gig { font-size: 9px; padding: 2px 3px; }
+  .cal-practice-day { font-size: 9px; padding: 2px 3px; }
+  .practice-avatar { width: 18px; height: 18px; font-size: 8px; }
+  .practice-scheduled-badge { font-size: 9px; padding: 2px 4px; }
+  .practice-schedule-btn { font-size: 8px; padding: 2px 4px; }
+  .calendar-month { font-size: 15px; letter-spacing: 1px; }
+  .calendar-nav { padding: 10px 12px; }
+
+  /* Upcoming gig cards — stack vertically */
+  .upcoming-gig-card { flex-wrap: wrap; gap: 6px; }
+  .upcoming-gig-date { min-width: unset; }
+
+  /* Tables — horizontal scroll (already handled by table-wrapper) */
+  .table-wrapper { font-size: 13px; }
+  tbody td { padding: 9px 10px; }
+  thead th { padding: 8px 10px; }
+
+  /* Action buttons */
+  .action-btns { flex-direction: column; gap: 4px; }
+  .action-btns .btn { width: 100%; justify-content: center; }
+
+  /* Dashboard stats */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .dashboard-columns { grid-template-columns: 1fr; }
-  .stats-grid { grid-template-columns: repeat(3, 1fr); }
-  .calendar-grid { font-size: 12px; }
-  .cal-day { min-height: 60px; }
+
+  /* Toast */
+  .toast-container { left: 12px; right: 12px; bottom: 16px; }
+  .toast { max-width: 100%; }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .cal-day { min-height: 44px; padding: 2px; }
+  .cal-day-num { font-size: 10px; }
+  .cal-gig, .cal-practice-day { display: none; } /* dots only — too small for text */
+  /* Show a dot indicator instead */
+  .cal-day:has(.cal-gig)::after,
+  .cal-day:has(.cal-practice-day)::after {
+    content: '';
+    display: block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--gold);
+    margin: 2px auto 0;
+  }
 }

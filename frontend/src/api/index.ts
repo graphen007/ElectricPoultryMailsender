@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Venue, Gig, Template } from '../types';
+import { Venue, Gig, Template, Practice, PracticeDay } from '../types';
 
 const api = axios.create({ baseURL: '/api' });
 
@@ -82,4 +82,17 @@ export const templatesApi = {
   create: (data: Partial<Template>) => api.post<Template>('/templates', data).then(r => r.data),
   update: (id: string, data: Partial<Template>) => api.put<Template>(`/templates/${id}`, data).then(r => r.data),
   delete: (id: string) => api.delete(`/templates/${id}`).then(r => r.data),
+};
+
+export const practiceApi = {
+  getByMonth: (year: number, month: number) =>
+    api.get<Practice[]>('/practice', { params: { year, month } }).then(r => r.data),
+  toggle: (date: string) =>
+    api.post<{ action: 'added' | 'removed'; entry?: Practice; date?: string }>('/practice/toggle', { date }).then(r => r.data),
+  getDaysByMonth: (year: number, month: number) =>
+    api.get<PracticeDay[]>('/practice/days', { params: { year, month } }).then(r => r.data),
+  scheduleDay: (date: string, notes?: string) =>
+    api.post<PracticeDay>('/practice/days', { date, notes }).then(r => r.data),
+  removeDay: (id: string) =>
+    api.delete(`/practice/days/${id}`).then(r => r.data),
 };

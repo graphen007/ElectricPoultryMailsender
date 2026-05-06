@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import TemplatesPage from './pages/TemplatesPage';
 import TriviaPage from './pages/TriviaPage';
 import UsersPage from './pages/UsersPage';
+import PracticePage from './pages/PracticePage';
 import LoginPage from './pages/LoginPage';
 import { ToastProvider } from './components/Toast';
 import { authApi } from './api';
@@ -14,6 +15,7 @@ import './App.css';
 function App() {
   const [user, setUser] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -45,42 +47,62 @@ function App() {
     <ToastProvider>
       <BrowserRouter>
         <div className="app-layout">
-          <nav className="sidebar">
+
+          {/* Mobile top bar */}
+          <div className="mobile-topbar" aria-label="Mobile navigation bar">
+            <button
+              className="hamburger-btn"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open navigation menu"
+              aria-expanded={sidebarOpen}
+              aria-controls="sidebar"
+            >
+              <span className="hamburger-line" />
+              <span className="hamburger-line" />
+              <span className="hamburger-line" />
+            </button>
+            <span className="mobile-logo">ELECTRIC <span style={{ color: 'var(--gold)' }}>POULTRY</span></span>
+          </div>
+
+          {/* Sidebar backdrop (mobile) */}
+          {sidebarOpen && (
+            <div
+              className="sidebar-backdrop"
+              onClick={() => setSidebarOpen(false)}
+              aria-hidden="true"
+            />
+          )}
+
+          <nav
+            id="sidebar"
+            className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}
+            aria-label="Main navigation"
+          >
             <div className="sidebar-logo">
               <span className="logo-text">ELECTRIC</span>
               <span className="logo-sub">POULTRY</span>
             </div>
             <ul className="nav-links">
-              <li>
-                <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>
-                  <span className="nav-icon">&#9632;</span> Dashboard
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to="/venues" className={({ isActive }) => isActive ? 'active' : ''}>
-                  <span className="nav-icon">&#9632;</span> Venues
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to="/calendar" className={({ isActive }) => isActive ? 'active' : ''}>
-                  <span className="nav-icon">&#9632;</span> Calendar
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to="/templates" className={({ isActive }) => isActive ? 'active' : ''}>
-                  <span className="nav-icon">&#9632;</span> Templates
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to="/trivia" className={({ isActive }) => isActive ? 'active' : ''}>
-                  <span className="nav-icon">&#9632;</span> Trivia
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to="/users" className={({ isActive }) => isActive ? 'active' : ''}>
-                  <span className="nav-icon">&#9632;</span> Users
-                </NavLink>
-              </li>
+              {[
+                { to: '/', label: 'Dashboard', end: true },
+                { to: '/venues', label: 'Venues' },
+                { to: '/calendar', label: 'Calendar' },
+                { to: '/practice', label: 'Practice' },
+                { to: '/templates', label: 'Templates' },
+                { to: '/trivia', label: 'Trivia' },
+                { to: '/users', label: 'Users' },
+              ].map(({ to, label, end }) => (
+                <li key={to}>
+                  <NavLink
+                    to={to}
+                    end={end}
+                    className={({ isActive }) => isActive ? 'active' : ''}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">&#9632;</span> {label}
+                  </NavLink>
+                </li>
+              ))}
             </ul>
             <div className="sidebar-footer">
               <div style={{ color: '#777', fontSize: '0.75rem', marginBottom: '0.4rem' }}>{user}</div>
@@ -93,11 +115,13 @@ function App() {
               </button>
             </div>
           </nav>
+
           <main className="main-content">
             <Routes>
               <Route path="/" element={<DashboardPage />} />
               <Route path="/venues" element={<VenuesPage />} />
               <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/practice" element={<PracticePage currentUsername={user} />} />
               <Route path="/templates" element={<TemplatesPage />} />
               <Route path="/trivia" element={<TriviaPage />} />
               <Route path="/users" element={<UsersPage />} />

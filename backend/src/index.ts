@@ -8,6 +8,7 @@ import gigRoutes from './routes/gigs';
 import emailRoutes from './routes/email';
 import templateRoutes from './routes/templates';
 import triviaRoutes from './routes/trivia';
+import practiceRoutes from './routes/practice';
 import publicRoutes from './routes/public';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
@@ -43,6 +44,7 @@ app.use('/api/gigs', requireAuth, gigRoutes);
 app.use('/api/email', requireAuth, emailRoutes);
 app.use('/api/templates', requireAuth, templateRoutes);
 app.use('/api/trivia', requireAuth, triviaRoutes);
+app.use('/api/practice', requireAuth, practiceRoutes);
 app.use('/api/users', userRoutes);
 
 // Serve React SPA — must come after all API routes

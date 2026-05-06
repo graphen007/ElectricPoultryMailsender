@@ -53,6 +53,24 @@ export interface Template {
   updatedAt: string;
 }
 
+export interface Practice {
+  _id: string;
+  date: string;
+  username: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PracticeDay {
+  _id: string;
+  date: string;
+  notes?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const STATUS_LABELS: Record<VenueStatus, string> = {
   not_contacted: 'Not Contacted',
   sent: 'Email Sent',
