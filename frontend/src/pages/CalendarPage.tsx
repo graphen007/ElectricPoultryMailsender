@@ -8,6 +8,12 @@ import {
   addMonths, subMonths, isSameMonth, isSameDay, parseISO, isToday
 } from 'date-fns';
 
+function useIcalUrl() {
+  const base = window.location.origin; // e.g. http://localhost:5173 or https://...fly.dev
+  // In dev the API is proxied; in production Express serves everything on the same origin
+  return `${base}/api/public/calendar.ics`;
+}
+
 export default function CalendarPage() {
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [practiceDays, setPracticeDays] = useState<PracticeDay[]>([]);
@@ -19,8 +25,13 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [listView, setListView] = useState(false);
+  const [subscribeOpen, setSubscribeOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { showToast } = useToast();
   const liveRef = useRef<HTMLDivElement>(null);
+  const icalUrl = useIcalUrl();
+  const webcalUrl = icalUrl.replace(/^https?/, 'webcal');
+  const googleUrl = `https://www.google.com/calendar/r/settings/addbyurl?url=${encodeURIComponent(icalUrl)}`;
 
   const announce = (msg: string) => {
     if (liveRef.current) liveRef.current.textContent = msg;
@@ -82,6 +93,13 @@ export default function CalendarPage() {
   };
   const openEdit = (g: Gig) => { setEditGig(g); setModalOpen(true); };
 
+  function copyIcalUrl() {
+    navigator.clipboard.writeText(icalUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
   // Calendar grid
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -122,9 +140,61 @@ export default function CalendarPage() {
           <button className="btn btn-ghost btn-sm" onClick={() => setListView(!listView)}>
             {listView ? 'Calendar View' : 'List View'}
           </button>
+          <button className="btn btn-ghost btn-sm" onClick={() => setSubscribeOpen(o => !o)}>
+            📅 Subscribe
+          </button>
           <button className="btn btn-primary" onClick={() => openAdd()}>+ Add Gig</button>
         </div>
       </div>
+
+      {subscribeOpen && (
+        <div style={{
+          background: '#141414', border: '1px solid #2a2a2a',
+          padding: '1.25rem 1.5rem', marginBottom: '1.5rem',
+          display: 'flex', flexDirection: 'column', gap: '0.75rem',
+        }}>
+          <div style={{ color: '#ffd600', fontFamily: 'Oswald, sans-serif', fontSize: '0.75rem', letterSpacing: '3px', textTransform: 'uppercase' }}>
+            Subscribe to Calendar
+          </div>
+          <p style={{ color: '#888', fontSize: '0.85rem', margin: 0 }}>
+            Add this feed to your calendar app — confirmed gigs and practice sessions update automatically.
+          </p>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <code style={{ background: '#0f0f0f', border: '1px solid #333', color: '#aaa', padding: '0.35rem 0.6rem', fontSize: '0.78rem', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {icalUrl}
+            </code>
+            <button className="btn btn-ghost btn-sm" onClick={copyIcalUrl} style={{ flexShrink: 0 }}>
+              {copied ? '✓ Copied' : 'Copy'}
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <a
+              href={googleUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-secondary btn-sm"
+              style={{ textDecoration: 'none' }}
+            >
+              + Google Calendar
+            </a>
+            <a
+              href={webcalUrl}
+              className="btn btn-secondary btn-sm"
+              style={{ textDecoration: 'none' }}
+            >
+              + Apple / Outlook
+            </a>
+            <a
+              href={icalUrl}
+              download="electric-poultry.ics"
+              className="btn btn-ghost btn-sm"
+              style={{ textDecoration: 'none' }}
+            >
+              ↓ Download .ics
+            </a>
+          </div>
+        </div>
+      )}
 
       {!listView ? (
         <div className="calendar-wrapper">
