@@ -88,4 +88,5 @@ export const STATUS_COLORS: Record<VenueStatus, string> = {
   negative: '#e53935',
   booked: '#2196f3',
   played: '#9c27b0',
+  awaiting: '#ff9800',
 };
