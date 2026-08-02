@@ -1,4 +1,4 @@
-export type VenueStatus = 'not_contacted' | 'sent' | 'positive' | 'negative' | 'booked' | 'played';
+export type VenueStatus = 'not_contacted' | 'sent' | 'positive' | 'negative' | 'booked' | 'played' | 'awaiting';
 
 export interface Venue {
   _id: string;
@@ -78,6 +78,7 @@ export const STATUS_LABELS: Record<VenueStatus, string> = {
   negative: 'Negative Response',
   booked: 'Booked',
   played: 'Played',
+  awaiting: 'Awaiting',
 };
 
 export const STATUS_COLORS: Record<VenueStatus, string> = {

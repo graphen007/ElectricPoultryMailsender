@@ -32,7 +32,7 @@ export default function VenueModal({ venue, onSave, onClose, loading }: Props) {
     onSave(form);
   };
 
-  const statuses: VenueStatus[] = ['not_contacted', 'sent', 'positive', 'negative', 'booked', 'played'];
+  const statuses: VenueStatus[] = ['not_contacted', 'sent', 'positive', 'negative', 'booked', 'played', 'awaiting'];
 
   return (
     <div className="modal-overlay" onClick={onClose}>
