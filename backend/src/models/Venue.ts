@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export type VenueStatus = 'not_contacted' | 'sent' | 'positive' | 'negative' | 'booked' | 'played';
+export type VenueStatus = 'not_contacted' | 'sent' | 'positive' | 'negative' | 'booked' | 'played' | "awaiting";
 
 export interface IVenue extends Document {
   name: string;
@@ -30,7 +30,7 @@ const VenueSchema = new Schema<IVenue>(
     notes: { type: String },
     status: {
       type: String,
-      enum: ['not_contacted', 'sent', 'positive', 'negative', 'booked', 'played'],
+      enum: ['not_contacted', 'sent', 'positive', 'negative', 'booked', 'played', 'awaiting'],
       default: 'not_contacted',
     },
     emailSentAt: { type: Date },
