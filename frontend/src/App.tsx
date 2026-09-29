@@ -7,6 +7,7 @@ import TemplatesPage from './pages/TemplatesPage';
 import TriviaPage from './pages/TriviaPage';
 import UsersPage from './pages/UsersPage';
 import PracticePage from './pages/PracticePage';
+import NotesPage from './pages/NotesPage';
 import LoginPage from './pages/LoginPage';
 import { ToastProvider } from './components/Toast';
 import { authApi } from './api';
@@ -16,6 +17,7 @@ function App() {
   const [user, setUser] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -33,6 +35,14 @@ function App() {
     setUser(null);
   }
 
+  function toggleSidebar() {
+    setSidebarCollapsed(collapsed => {
+      const nextCollapsed = !collapsed;
+      localStorage.setItem('sidebarCollapsed', String(nextCollapsed));
+      return nextCollapsed;
+    });
+  }
+
   if (checking) return null;
 
   if (!user) {
@@ -46,7 +56,7 @@ function App() {
   return (
     <ToastProvider>
       <BrowserRouter>
-        <div className="app-layout">
+        <div className={`app-layout${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
 
           {/* Mobile top bar */}
           <div className="mobile-topbar" aria-label="Mobile navigation bar">
@@ -78,9 +88,19 @@ function App() {
             className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}
             aria-label="Main navigation"
           >
-            <div className="sidebar-logo">
-              <span className="logo-text">ELECTRIC</span>
-              <span className="logo-sub">POULTRY</span>
+            <div className="sidebar-header">
+              <div className="sidebar-logo">
+                <span className="logo-text">ELECTRIC</span>
+                <span className="logo-sub">POULTRY</span>
+              </div>
+              <button
+                className="sidebar-toggle"
+                onClick={toggleSidebar}
+                aria-label={sidebarCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
+                aria-expanded={!sidebarCollapsed}
+              >
+                {sidebarCollapsed ? '»' : '«'}
+              </button>
             </div>
             <ul className="nav-links">
               {[
@@ -88,6 +108,7 @@ function App() {
                 { to: '/venues', label: 'Venues' },
                 { to: '/calendar', label: 'Calendar' },
                 { to: '/practice', label: 'Practice' },
+                { to: '/notes', label: 'Notes' },
                 { to: '/templates', label: 'Templates' },
                 { to: '/trivia', label: 'Trivia' },
                 { to: '/users', label: 'Users' },
@@ -99,7 +120,8 @@ function App() {
                     className={({ isActive }) => isActive ? 'active' : ''}
                     onClick={() => setSidebarOpen(false)}
                   >
-                    <span className="nav-icon">&#9632;</span> {label}
+                    <span className="nav-icon">&#9632;</span>
+                    <span className="nav-label">{label}</span>
                   </NavLink>
                 </li>
               ))}
@@ -122,6 +144,7 @@ function App() {
               <Route path="/venues" element={<VenuesPage />} />
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/practice" element={<PracticePage currentUsername={user} />} />
+              <Route path="/notes" element={<NotesPage />} />
               <Route path="/templates" element={<TemplatesPage />} />
               <Route path="/trivia" element={<TriviaPage />} />
               <Route path="/users" element={<UsersPage />} />

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Venue, Gig, Template, Practice, PracticeDay } from '../types';
+import { Venue, Gig, Note, Template, Practice, PracticeDay } from '../types';
 
 const api = axios.create({ baseURL: '/api' });
 
@@ -45,6 +45,13 @@ export const venuesApi = {
   delete: (id: string) => api.delete(`/venues/${id}`).then(r => r.data),
 };
 
+export const notesApi = {
+  getAll: () => api.get<Note[]>('/notes').then(r => r.data),
+  create: (data: { title: string; content?: string; venue?: string }) => api.post<Note>('/notes', data).then(r => r.data),
+  update: (id: string, data: { title: string; content?: string; venue?: string }) => api.put<Note>(`/notes/${id}`, data).then(r => r.data),
+  delete: (id: string) => api.delete(`/notes/${id}`).then(r => r.data),
+};
+
 export const gigsApi = {
   getAll: () => api.get<Gig[]>('/gigs').then(r => r.data),
   getById: (id: string) => api.get<Gig>(`/gigs/${id}`).then(r => r.data),
@@ -56,6 +63,7 @@ export const gigsApi = {
 export const emailApi = {
   send: (venueId: string, templateId?: string, subject?: string) =>
     api.post(`/email/send/${venueId}`, { templateId, subject }).then(r => r.data),
+  checkReplies: () => api.post<{ updated: number }>('/email/check-replies').then(r => r.data),
   previewUrl: (venueId: string, templateId?: string, lang?: 'da' | 'en') => {
     const params = new URLSearchParams();
     if (templateId) params.set('templateId', templateId);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { venuesApi, emailApi, templatesApi } from '../api';
-import { Venue, VenueStatus, STATUS_LABELS, STATUS_COLORS, Template } from '../types';
+import { Link } from 'react-router-dom';
+import { venuesApi, notesApi, emailApi, templatesApi } from '../api';
+import { Note, Venue, VenueStatus, STATUS_LABELS, STATUS_COLORS, Template } from '../types';
 import VenueModal from '../components/VenueModal';
 import { useToast } from '../components/Toast';
 import { format } from 'date-fns';
@@ -19,6 +20,7 @@ interface SendModalState {
 
 export default function VenuesPage() {
   const [venues, setVenues] = useState<Venue[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [filterStatus, setFilterStatus] = useState<VenueStatus | 'all'>('all');
@@ -27,7 +29,9 @@ export default function VenuesPage() {
   const [editVenue, setEditVenue] = useState<Venue | undefined>();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [sendModal, setSendModal] = useState<SendModalState | null>(null);
+  const [responseModal, setResponseModal] = useState<Venue | null>(null);
   const [sending, setSending] = useState(false);
+  const [checkingReplies, setCheckingReplies] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('status');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const { showToast } = useToast();
@@ -35,8 +39,9 @@ export default function VenuesPage() {
   const load = async () => {
     try {
       setLoading(true);
-      const data = await venuesApi.getAll();
-      setVenues(data);
+      const [venueData, noteData] = await Promise.all([venuesApi.getAll(), notesApi.getAll()]);
+      setVenues(venueData);
+      setNotes(noteData);
     } catch {
       showToast('Failed to load venues', 'error');
     } finally {
@@ -45,6 +50,20 @@ export default function VenuesPage() {
   };
 
   useEffect(() => { load(); }, []);
+
+  function notesForVenue(venueId: string) {
+    return notes.filter(note => note.venue?._id === venueId);
+  }
+
+  function hasResponse(venue: Venue) {
+    return Boolean(
+      venue.responseReceivedAt ||
+      venue.mailResponse ||
+      venue.responseNote ||
+      venue.status === 'positive' ||
+      venue.status === 'negative'
+    );
+  }
 
   const filtered = venues.filter(v => {
     const matchStatus = filterStatus === 'all' || v.status === filterStatus;
@@ -63,6 +82,12 @@ export default function VenuesPage() {
     }
     return sortDir === 'asc' ? cmp : -cmp;
   });
+
+  const mailResponse = responseModal?.mailResponse ||
+    (responseModal?.responseReceivedAt ? responseModal.responseNote : undefined);
+  const responseNote = responseModal?.responseReceivedAt && !responseModal.mailResponse
+    ? undefined
+    : responseModal?.responseNote;
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -138,6 +163,19 @@ export default function VenuesPage() {
     }
   };
 
+  const handleCheckReplies = async () => {
+    try {
+      setCheckingReplies(true);
+      const { updated } = await emailApi.checkReplies();
+      await load();
+      showToast(updated ? `${updated} response${updated !== 1 ? 's' : ''} found` : 'No new responses found', 'success');
+    } catch (err: any) {
+      showToast(err?.response?.data?.error || 'Failed to check replies', 'error');
+    } finally {
+      setCheckingReplies(false);
+    }
+  };
+
   const openAdd = () => { setEditVenue(undefined); setModalOpen(true); };
   const openEdit = (v: Venue) => { setEditVenue(v); setModalOpen(true); };
 
@@ -145,7 +183,12 @@ export default function VenuesPage() {
     <div className="page">
       <div className="page-header">
         <h1 className="page-title">Venues <span>&amp; Outreach</span></h1>
-        <button className="btn btn-primary" onClick={openAdd}>+ Add Venue</button>
+        <div className="page-header-actions">
+          <button className="btn btn-secondary" onClick={handleCheckReplies} disabled={checkingReplies}>
+            {checkingReplies ? 'Checking...' : 'Check Replies'}
+          </button>
+          <button className="btn btn-primary" onClick={openAdd}>+ Add Venue</button>
+        </div>
       </div>
 
       <div className="filters">
@@ -180,8 +223,8 @@ export default function VenuesPage() {
                 <th onClick={() => toggleSort('name')} style={{ cursor: 'pointer', userSelect: 'none' }}>Venue<SortIcon col="name" /></th>
                 <th onClick={() => toggleSort('city')} style={{ cursor: 'pointer', userSelect: 'none' }}>City<SortIcon col="city" /></th>
                 <th>Contact</th>
-                <th>Email</th>
-                <th>Lang</th>
+                <th>Notes</th>
+                <th>Responded</th>
                 <th onClick={() => toggleSort('status')} style={{ cursor: 'pointer', userSelect: 'none' }}>Status<SortIcon col="status" /></th>
                 <th onClick={() => toggleSort('emailSentAt')} style={{ cursor: 'pointer', userSelect: 'none' }}>Sent At<SortIcon col="emailSentAt" /></th>
                 <th>Actions</th>
@@ -190,7 +233,7 @@ export default function VenuesPage() {
             <tbody>
               {filtered.map(v => (
                 <tr key={v._id}>
-                  <td>
+                  <td className="venue-name-cell">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <strong>{v.name}</strong>
                       {v.website && (
@@ -199,14 +242,31 @@ export default function VenuesPage() {
                         </a>
                       )}
                     </div>
-                    {v.responseNote && (
-                      <div className="response-note">&ldquo;{v.responseNote}&rdquo;</div>
-                    )}
                   </td>
                   <td>{v.city || '—'}</td>
-                  <td>{v.contactPerson || '—'}</td>
-                  <td><a href={`mailto:${v.email}`}>{v.email}</a></td>
-                  <td><span className="lang-badge">{v.preferredLanguage.toUpperCase()}</span></td>
+                  <td className="venue-contact-cell">
+                    <a href={`mailto:${v.email}`}>{v.email}</a>
+                    {v.contactPerson && <div className="contact-person">{v.contactPerson}</div>}
+                  </td>
+                  <td className="venue-notes-cell">
+                    {v.notes || notesForVenue(v._id).length > 0 ? (
+                      <>
+                        {v.notes && <div>{v.notes}</div>}
+                        {notesForVenue(v._id).map(note => (
+                          <Link className="linked-note" to={`/notes?edit=${note._id}`} key={note._id}>↳ {note.title}</Link>
+                        ))}
+                      </>
+                    ) : '—'}
+                  </td>
+                  <td>
+                    {hasResponse(v) ? (
+                      <button className="response-status response-status-yes" onClick={() => setResponseModal(v)}>
+                        Yes
+                      </button>
+                    ) : (
+                      <span className="response-status">No</span>
+                    )}
+                  </td>
                   <td>
                     <span className="status-badge" style={{ background: STATUS_COLORS[v.status] + '22', color: STATUS_COLORS[v.status], border: `1px solid ${STATUS_COLORS[v.status]}44` }}>
                       {STATUS_LABELS[v.status]}
@@ -230,6 +290,38 @@ export default function VenuesPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {responseModal && (
+        <div className="modal-overlay" onClick={() => setResponseModal(null)}>
+          <div className="modal response-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Response — <span style={{ color: 'var(--gold)' }}>{responseModal.name}</span></h2>
+              <button className="btn-close" onClick={() => setResponseModal(null)}>&times;</button>
+            </div>
+            <div className="modal-body">
+              {responseModal.responseReceivedAt && (
+                <div className="response-date">
+                  Received {format(new Date(responseModal.responseReceivedAt), 'dd MMM yyyy HH:mm')}
+                </div>
+              )}
+              <div className="response-full">
+                <div className="response-section">
+                  <h3>Response Note</h3>
+                  <div className="response-full">
+                      {responseNote || 'No response note added.'}
+                  </div>
+                </div>
+                <div className="response-section">
+                  <h3>Mail Response</h3>
+                  <div className="response-full">
+                      {mailResponse || 'No mail response text was stored.'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

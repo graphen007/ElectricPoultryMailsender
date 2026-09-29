@@ -12,6 +12,7 @@ export interface Venue {
   status: VenueStatus;
   emailSentAt?: string;
   responseReceivedAt?: string;
+  mailResponse?: string;
   responseNote?: string;
   preferredLanguage: 'da' | 'en';
   createdAt: string;
@@ -37,6 +38,18 @@ export interface Trivia {
   _id: string;
   text: string;
   active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Note {
+  _id: string;
+  title: string;
+  content?: string;
+  venue?: {
+    _id: string;
+    name: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

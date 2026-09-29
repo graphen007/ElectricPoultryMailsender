@@ -13,6 +13,7 @@ export interface IVenue extends Document {
   status: VenueStatus;
   emailSentAt?: Date;
   responseReceivedAt?: Date;
+  mailResponse?: string;
   responseNote?: string;
   preferredLanguage: 'da' | 'en';
   createdAt: Date;
@@ -35,6 +36,7 @@ const VenueSchema = new Schema<IVenue>(
     },
     emailSentAt: { type: Date },
     responseReceivedAt: { type: Date },
+    mailResponse: { type: String },
     responseNote: { type: String },
     preferredLanguage: { type: String, enum: ['da', 'en'], default: 'da' },
   },

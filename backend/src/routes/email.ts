@@ -3,8 +3,19 @@ import Venue from '../models/Venue';
 import Template from '../models/Template';
 import { sendBookingEmail, sendBookingEmailFromTemplate } from '../services/emailService';
 import { getDanishEmailHtml, getDanishEmailText, getEnglishEmailHtml, getEnglishEmailText } from '../templates/emailTemplates';
+import { checkForReplies } from '../services/replyChecker';
 
 const router = Router();
+
+router.post('/check-replies', async (_req: Request, res: Response) => {
+  try {
+    const updated = await checkForReplies();
+    res.json({ updated });
+  } catch (err: any) {
+    console.error('Reply check error:', err);
+    res.status(503).json({ error: 'Failed to check email replies', details: err.message });
+  }
+});
 
 function applyPlaceholder(content: string, recipientName: string): string {
   return content.replace(/\{\{recipientName\}\}/g, recipientName);

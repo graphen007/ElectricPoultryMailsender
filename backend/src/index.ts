@@ -12,6 +12,8 @@ import practiceRoutes from './routes/practice';
 import publicRoutes from './routes/public';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
+import noteRoutes from './routes/notes';
+import { startReplyChecker } from './services/replyChecker';
 import { requireAuth } from './middleware/auth';
 
 dotenv.config();
@@ -46,6 +48,7 @@ app.use('/api/templates', requireAuth, templateRoutes);
 app.use('/api/trivia', requireAuth, triviaRoutes);
 app.use('/api/practice', requireAuth, practiceRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/notes', requireAuth, noteRoutes);
 
 // Serve React SPA — must come after all API routes
 const frontendDist = path.join(__dirname, '..', 'frontend');
@@ -60,6 +63,7 @@ mongoose
     console.log('Connected to MongoDB');
     app.listen(Number(PORT), '0.0.0.0', () => {
       console.log(`Server running on 0.0.0.0:${PORT}`);
+      startReplyChecker();
     });
   })
   .catch((err) => {
